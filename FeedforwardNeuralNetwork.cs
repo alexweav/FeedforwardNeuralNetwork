@@ -79,6 +79,13 @@ namespace NeuralNetwork {
         //Takes an input vector and an expected output vector
         //Uses the discrepancy between the two to train the network via backpropagation
         public void TrainNetwork(Matrix inputs, Matrix expectedResult) {
+            //First, we evaluate the network.
+            //This is slightly different from the normal evaluation method:
+            //We must track the output of each layer, as it is used later in calculation
+            //The outputs of the layers are stored in an array called outputs
+            //outputs[0] is the output of the input layer (and therefore the input of the system)
+            //We must also track the sigmaPrimes of each layer, which is simply the weighted sum of each layer passed through the derivative of the sigmoid function rather than the normal sigmoid function
+            //These are used later in calculation and are stored in a similar manner to the actual outputs
             Matrix[] sigmaPrimes = new Matrix[numLayers];
             sigmaPrimes[0] = null;
             Matrix[] outputs = new Matrix[numLayers];
@@ -91,15 +98,21 @@ namespace NeuralNetwork {
             Matrix actualResult = outputs[numLayers - 1];
             Matrix[] layerDeltas = new Matrix[numLayers];
             layerDeltas[0] = null;
+            //calculate the node delta heuristic for each layer
+            //The layerDelta is a vector for which layerDelta[i] is the node delta for the ith node in the layer
+            //layerDeltas is an array of the layerDelta vectors.  layerDeltas[0] is the layer delta for the input layer, layerDeltas[1] is for the first layer, etc.
+            //The input layer has no layer delta defined on it, so therefore layerDeltas[0] is null
+            //The layer delta for the final layer is calculated as follows:
             layerDeltas[numLayers - 1] = Matrix.HadamardProduct((actualResult - expectedResult), sigmaPrimes[numLayers - 1]);
+            //The layer delta for every other layer depends on the layer delta of the layer after it, and are calculated as follows:
             for(int i = numLayers - 2; i > 0; --i) {
                 layerDeltas[i] = Matrix.HadamardProduct(Matrix.Transpose(weightMatrices[i + 1]) * layerDeltas[i + 1], sigmaPrimes[i]);
             }
-            //now we update the biases
+            //now we update the biases, from the layer deltas
             for (int i = 1; i < numLayers; ++i) {
                 biases[i] = biases[i] - learningRate * (layerDeltas[i]);
             }
-            //and update the weights
+            //and update the weights from the layer deltas
             for (int i = 1; i < numLayers; ++i) {
                 weightMatrices[i] = weightMatrices[i] - learningRate * (layerDeltas[i] * Matrix.Transpose(outputs[i - 1]));
             }
