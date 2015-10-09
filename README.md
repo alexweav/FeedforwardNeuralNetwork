@@ -27,6 +27,16 @@ In a given network, the decisions are made by setting the weights and biases to 
 
 ##Implementation-Specific Details
 
+In this class, neural networks are constructed from an array of integers.  The array must have at least two elements.  The first element [0] represents the size of the input vector.  Element [1] represents the number of nodes in the first processing layer, element [2] represents the number of nodes in the second processing layer, and so on.  The output vector will be the same length as the number of nodes in the final layer.
+
+Input and output vectors are given as column vectors using my Matrix class, which is included in the implementation. The following image represents what the matrices representing the inputs and outputs will look like.
+
+![alt tag](https://upload.wikimedia.org/math/a/e/0/ae099f03b525727414195676df0e23ea.png)
+
+When evaluating the network, a single column vector is given, which will be used as the input to the network.  The output vector will be returned.  When training the network, both input and output column vectors are given by the user, and the neural network learns by evaluating the given input and comparing it to the given output.
+
+When training, a real number constant known as the *training rate* is used.  This number is a constant multiplier that is used inside the training process.  A higher training rate means that the network will compensate to a change faster, however there is a higher likelihood that it will "overshoot" the desired state.  A lower training rate lowers that likelihood, but it will take longer to train the network in some cases.  The ideal training rate varies from problem to problem, and it is highly advised that the user experiments with this value to find the most effective training set.
+
 Information source: *Neural Networks and Deep Learning* - http://neuralnetworksanddeeplearning.com/
 
 More description will be added.
