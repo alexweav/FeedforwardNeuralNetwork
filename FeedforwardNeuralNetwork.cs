@@ -12,7 +12,7 @@ namespace NeuralNetwork {
         private int[] layerSizes;
         private Matrix[] weightMatrices;
         private Matrix[] biases;
-        private float learningRate = 0.4F;
+        private float learningRate = 0.8F;
 
         //Construction of a feedforward network is from a sequence of positive integer values
         //The first integer in the sequence represents the number of neurons in the first layer of the network
