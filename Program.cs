@@ -195,7 +195,7 @@ namespace NeuralNetwork {
             int[] layers = new int[] { 2, 1, 1 };
             FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers);
             //Train this many cycles
-            int numTrainingEpochs = 10000;
+            int numTrainingEpochs = 1000;
             for (int i = 0; i < numTrainingEpochs; ++i) {
                 //Sets input matrices and output matrices and trains the network accordingly for all combinations
                 float[,] trainingArray = new float[,] { { 0 },
@@ -219,7 +219,7 @@ namespace NeuralNetwork {
                 trainingArray = new float[,] { { 1 },
                                                { 1 } };
                 trainingInput = new Matrix(trainingArray);
-                expected = new float[,] { { 0 } };
+                expected = new float[,] { { 1 } };
                 expectedOutput = new Matrix(expected);
                 fnn.TrainNetwork(trainingInput, expectedOutput);
             }

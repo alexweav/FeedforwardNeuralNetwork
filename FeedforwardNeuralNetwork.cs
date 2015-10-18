@@ -38,22 +38,24 @@ namespace NeuralNetwork {
             InitializeBiases();
         }
 
-        //Sets every weight to 1
+        //Sets every weight to a random value on a Gaussian distribution with mean 0 and standard deviation 1 
         private void InitializeWeightMatrices() {
+            GaussianRandom random = new GaussianRandom(0, 1);
             for (int l = 1; l < numLayers; ++l) {
                 for (int i = 1; i <= weightMatrices[l].NumRows; ++i) {
                     for(int j = 1; j <= weightMatrices[l].NumColumns; ++j) {
-                        weightMatrices[l][i, j] = 1;
+                        weightMatrices[l][i, j] = (float)random.NextDouble();
                     }
                 }
             }
         }
 
-        //Sets every bias to 1
+        //Sets every bias to a random value on a Gaussian distribution with mean 0 and standard deviation 1
         private void InitializeBiases() {
+            GaussianRandom random = new GaussianRandom(0, 1);
             for (int l = 1; l < numLayers; ++l) {
                 for (int i = 1; i <= biases[l].NumRows; ++i) {
-                    biases[l][i, 1] = 1;
+                    biases[l][i, 1] = (float)random.NextDouble();
                 }
             }
         }
