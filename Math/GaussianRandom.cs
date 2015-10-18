@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace NeuralNetwork {
     public class GaussianRandom {
 
-        Random random;
-        double mean;
-        double stdDev;
+        private Random random;
+        private double mean;
+        private double stdDev;
 
         //Creates the Gaussian random value generator set to the given mean and standard deviation
         public GaussianRandom(double mean, double stdDev) {
@@ -23,6 +23,24 @@ namespace NeuralNetwork {
             random = new Random(seed);
             this.mean = mean;
             this.stdDev = stdDev;
+        }
+
+        public double Mean {
+            get {
+                return mean;
+            }
+            set {
+                mean = value;
+            }
+        }
+
+        public double StdDev {
+            get {
+                return stdDev;
+            }
+            set {
+                stdDev = value;
+            }
         }
         
         //Returns a random double that follows the set Gaussian distribution

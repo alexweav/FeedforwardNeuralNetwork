@@ -44,6 +44,7 @@ namespace NeuralNetwork {
             for (int l = 1; l < numLayers; ++l) {
                 for (int i = 1; i <= weightMatrices[l].NumRows; ++i) {
                     for(int j = 1; j <= weightMatrices[l].NumColumns; ++j) {
+                        random.StdDev = Math.Pow(weightMatrices[l].NumColumns, -0.5);
                         weightMatrices[l][i, j] = (float)random.NextDouble();
                     }
                 }
@@ -55,6 +56,7 @@ namespace NeuralNetwork {
             GaussianRandom random = new GaussianRandom(0, 1);
             for (int l = 1; l < numLayers; ++l) {
                 for (int i = 1; i <= biases[l].NumRows; ++i) {
+                    random.StdDev = Math.Pow(weightMatrices[l].NumColumns, -0.5);
                     biases[l][i, 1] = (float)random.NextDouble();
                 }
             }

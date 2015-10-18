@@ -11,8 +11,8 @@ namespace NeuralNetwork {
         //This is simply a main function to demonstrate the use of the network
         //Not to be included in a program which employs the network
         static void Main(string[] args) {
-            LogicGatesExample();
-            //DecimalBinaryExample();
+            //LogicGatesExample();
+            DecimalBinaryExample();
             //MNISTExample();
         }
 
@@ -122,7 +122,7 @@ namespace NeuralNetwork {
         }
 
         public static void DecimalBinaryExample() {
-            int[] layers = new int[] { 2, 3, 4 };
+            int[] layers = new int[] { 2, 3, 5, 4 };
             FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers);
             DecimalBinaryTestNetwork(fnn);
             int numTrainingEpochs = 10000;
@@ -195,7 +195,7 @@ namespace NeuralNetwork {
             int[] layers = new int[] { 2, 1, 1 };
             FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers);
             //Train this many cycles
-            int numTrainingEpochs = 1000;
+            int numTrainingEpochs = 100000;
             for (int i = 0; i < numTrainingEpochs; ++i) {
                 //Sets input matrices and output matrices and trains the network accordingly for all combinations
                 float[,] trainingArray = new float[,] { { 0 },
@@ -219,7 +219,7 @@ namespace NeuralNetwork {
                 trainingArray = new float[,] { { 1 },
                                                { 1 } };
                 trainingInput = new Matrix(trainingArray);
-                expected = new float[,] { { 1 } };
+                expected = new float[,] { { 0 } };
                 expectedOutput = new Matrix(expected);
                 fnn.TrainNetwork(trainingInput, expectedOutput);
             }
