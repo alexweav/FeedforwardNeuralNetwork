@@ -51,7 +51,7 @@ namespace NeuralNetwork {
                         int expectedNum = labelsReader.ReadByte();
                         expectedOutput[expectedNum + 1, 1] = 1;
 
-                        fnn.TrainNetwork(input, expectedOutput);
+                        fnn.TrainIteration(input, expectedOutput);
 
                         if ((r + 1) % 100 == 0) {
                             Console.WriteLine((r + 1) / 100 + "00 images trained.");
@@ -92,7 +92,7 @@ namespace NeuralNetwork {
                     }
                     int expectedNum = labelsReader.ReadByte();
                     expectedOutput[expectedNum + 1, 1] = 1;
-                    Matrix actualOutput = fnn.EvaluateNetwork(input);
+                    Matrix actualOutput = fnn.Evaluate(input);
                     bool successfulRun = true;
                     float largestOutputValue = 0;
                     int index = 0;
@@ -125,38 +125,38 @@ namespace NeuralNetwork {
             int[] layers = new int[] { 2, 3, 5, 4 };
             FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers);
             DecimalBinaryTestNetwork(fnn);
-            int numTrainingEpochs = 10000;
-            for (int r = 0; r < numTrainingEpochs; ++r) {
-                Matrix inputs = new Matrix(2, 1);
-                Matrix expectedOutputs = new Matrix(4, 1);
-                expectedOutputs[1, 1] = 1;
-                fnn.TrainNetwork(inputs, expectedOutputs);  //train for 0
-
-                inputs[1, 1] = 0;
-                inputs[2, 1] = 1;
-                expectedOutputs[1, 1] = 0;
-                expectedOutputs[2, 1] = 1;
-                fnn.TrainNetwork(inputs, expectedOutputs);  //train for 1
-
-                inputs[1, 1] = 1;
-                inputs[2, 1] = 0;
-                expectedOutputs[2, 1] = 0;
-                expectedOutputs[3, 1] = 1;
-                fnn.TrainNetwork(inputs, expectedOutputs);  //train for 2
-
-                inputs[1, 1] = 1;
-                inputs[2, 1] = 1;
-                expectedOutputs[3, 1] = 0;
-                expectedOutputs[4, 1] = 1;
-                fnn.TrainNetwork(inputs, expectedOutputs);  //train for 3
-            }
+            Matrix[] expectedOutputs = { new Matrix(new float[4,1]{ {1},
+                                                                    {0},
+                                                                    {0},
+                                                                    {0}}), 
+                                         new Matrix(new float[4,1]{ {0},
+                                                                    {1},
+                                                                    {0},
+                                                                    {0}}), 
+                                         new Matrix(new float[4,1]{ {0},
+                                                                    {0},
+                                                                    {1},
+                                                                    {0}}), 
+                                         new Matrix(new float[4,1]{ {0},
+                                                                    {0},
+                                                                    {0},
+                                                                    {1}})};
+            Matrix[] inputs =          { new Matrix(new float[2,1]{ {0},
+                                                                    {0}}),
+                                         new Matrix(new float[2,1]{ {0},
+                                                                    {1}}),
+                                         new Matrix(new float[2,1]{ {1},
+                                                                    {0}}),
+                                         new Matrix(new float[2,1]{ {1},
+                                                                    {1}})};
+            fnn.TrainEpoch(inputs, expectedOutputs, 1000);
             DecimalBinaryTestNetwork(fnn);
         }
 
         public static void DecimalBinaryTestNetwork(FeedforwardNeuralNetwork fnn) {
             Matrix inputs = new Matrix(2, 1);
 
-            Matrix outputs = fnn.EvaluateNetwork(inputs);   //test for input = 0
+            Matrix outputs = fnn.Evaluate(inputs);   //test for input = 0
             if (outputs[1, 1] > 0.9 && outputs[2, 1] < 0.1 && outputs[3, 1] < 0.1 && outputs[4, 1] < 0.1) {
                 Console.WriteLine("0 success.");
             } else {
@@ -164,7 +164,7 @@ namespace NeuralNetwork {
             }
             inputs[1, 1] = 0;
             inputs[2, 1] = 1;
-            outputs = fnn.EvaluateNetwork(inputs);  //test for input = 1
+            outputs = fnn.Evaluate(inputs);  //test for input = 1
             if (outputs[1, 1] < 0.1 && outputs[2, 1] > 0.9 && outputs[3, 1] < 0.1 && outputs[4, 1] < 0.1) {
                 Console.WriteLine("1 success.");
             } else {
@@ -172,7 +172,7 @@ namespace NeuralNetwork {
             }
             inputs[1, 1] = 1;
             inputs[2, 1] = 0;
-            outputs = fnn.EvaluateNetwork(inputs);  //test for input = 2
+            outputs = fnn.Evaluate(inputs);  //test for input = 2
             if (outputs[1, 1] < 0.1 && outputs[2, 1] < 0.1 && outputs[3, 1] > 0.9 && outputs[4, 1] < 0.1) {
                 Console.WriteLine("2 success.");
             } else {
@@ -180,7 +180,7 @@ namespace NeuralNetwork {
             }
             inputs[1, 1] = 0;
             inputs[2, 1] = 1;
-            outputs = fnn.EvaluateNetwork(inputs);  //test for input = 3
+            outputs = fnn.Evaluate(inputs);  //test for input = 3
             if (outputs[1, 1] < 0.1 && outputs[2, 1] < 0.1 && outputs[3, 1] < 0.1 && outputs[4, 1] > 0.9) {
                 Console.WriteLine("3 success.");
             } else {
@@ -203,47 +203,47 @@ namespace NeuralNetwork {
                 Matrix trainingInput = new Matrix(trainingArray);
                 float[,] expected = new float[,] { { 0 } };
                 Matrix expectedOutput = new Matrix(expected);
-                fnn.TrainNetwork(trainingInput, expectedOutput);
+                fnn.TrainIteration(trainingInput, expectedOutput);
                 trainingArray = new float[,] { { 0 },
                                                { 1 } };
                 trainingInput = new Matrix(trainingArray);
                 expected = new float[,] { { 1 } };
                 expectedOutput = new Matrix(expected);
-                fnn.TrainNetwork(trainingInput, expectedOutput);
+                fnn.TrainIteration(trainingInput, expectedOutput);
                 trainingArray = new float[,] { { 1 },
                                                { 0 } };
                 trainingInput = new Matrix(trainingArray);
                 expected = new float[,] { { 1 } };
                 expectedOutput = new Matrix(expected);
-                fnn.TrainNetwork(trainingInput, expectedOutput);
+                fnn.TrainIteration(trainingInput, expectedOutput);
                 trainingArray = new float[,] { { 1 },
                                                { 1 } };
                 trainingInput = new Matrix(trainingArray);
                 expected = new float[,] { { 0 } };
                 expectedOutput = new Matrix(expected);
-                fnn.TrainNetwork(trainingInput, expectedOutput);
+                fnn.TrainIteration(trainingInput, expectedOutput);
             }
             //After training, evaluates the network with respect to all possible inputs
             //Prints their outputs to the console to see the result of training
             float[,] inputArray = new float[,] { { 0 },
                                                  { 0 } };
             Matrix input = new Matrix(inputArray);
-            Matrix output = fnn.EvaluateNetwork(input);
+            Matrix output = fnn.Evaluate(input);
             Console.WriteLine(output[1, 1]);
             inputArray = new float[,] { { 0 },
                                         { 1 } };
             input = new Matrix(inputArray);
-            output = fnn.EvaluateNetwork(input);
+            output = fnn.Evaluate(input);
             Console.WriteLine(output[1, 1]);
             inputArray = new float[,] { { 1 },
                                         { 0 } };
             input = new Matrix(inputArray);
-            output = fnn.EvaluateNetwork(input);
+            output = fnn.Evaluate(input);
             Console.WriteLine(output[1, 1]);
             inputArray = new float[,] { { 1 },
                                         { 1 } };
             input = new Matrix(inputArray);
-            output = fnn.EvaluateNetwork(input);
+            output = fnn.Evaluate(input);
             Console.WriteLine(output[1, 1]);
         }
     }

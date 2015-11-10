@@ -64,7 +64,7 @@ namespace NeuralNetwork {
 
         //Takes the given input vector and passes it through the network
         //Returns the network's output vector
-        public Matrix EvaluateNetwork(Matrix inputs) {
+        public Matrix Evaluate(Matrix inputs) {
             if (inputs == null) {
                 throw new NullReferenceException("Cannot evaluate a null input vector.");
             }
@@ -78,11 +78,16 @@ namespace NeuralNetwork {
             return layerOutput;
         }
 
-        
-
+        public void TrainEpoch(Matrix[] inputs, Matrix[] expectedResult, int numEpochs) {
+            for (int i = 0; i < numEpochs; ++i) {
+                for (int j = 0; j < inputs.Length; ++j) {
+                    TrainIteration(inputs[j], expectedResult[j]);
+                }
+            }
+        }
         //Takes an input vector and an expected output vector
         //Uses the discrepancy between the two to train the network via backpropagation
-        public void TrainNetwork(Matrix inputs, Matrix expectedResult) {
+        /*public void TrainIteration(Matrix inputs, Matrix expectedResult) {
             //First, we evaluate the network.
             //This is slightly different from the normal evaluation method:
             //We must track the output of each layer, as it is used later in calculation
@@ -121,6 +126,27 @@ namespace NeuralNetwork {
                 weightMatrices[i] = weightMatrices[i] - learningRate * (layerDeltas[i] * Matrix.Transpose(outputs[i - 1]));
             }
             
+        }*/
+
+        public void TrainIteration(Matrix inputs, Matrix expectedResult) {
+            Matrix[] weightedLayerSums = new Matrix[numLayers];
+            Matrix[] layerOutputs = new Matrix[numLayers];
+            layerOutputs[0] = inputs;
+            weightedLayerSums[0] = null;
+            for (int i = 1; i < numLayers; ++i) {
+                weightedLayerSums[i] = weightMatrices[i] * layerOutputs[i - 1] + biases[i];
+                layerOutputs[i] = Sigmoid.Sigma(weightedLayerSums[i]);
+            }
+            Matrix[] layerDeltas = new Matrix[numLayers];
+            layerDeltas[numLayers - 1] = Matrix.HadamardProduct(layerOutputs[numLayers-1] - expectedResult, Sigmoid.SigmaPrime(weightedLayerSums[numLayers-1]));
+            for (int i = numLayers - 2; i > 0; --i) {
+                layerDeltas[i] = Matrix.HadamardProduct(Matrix.Transpose(weightMatrices[i+1]) * layerDeltas[i+1], Sigmoid.SigmaPrime(weightedLayerSums[i]));
+            }
+            //Gradient descent
+            for (int i = numLayers - 1; i > 0; --i) {
+                weightMatrices[i] = weightMatrices[i] - learningRate * (layerDeltas[i] * Matrix.Transpose(layerOutputs[i-1]));
+                biases[i] = biases[i] - learningRate * (layerDeltas[i]);
+            }
         }
 
         //Assume we have two output vectors of a neural network.
