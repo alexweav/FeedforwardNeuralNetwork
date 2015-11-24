@@ -12,7 +12,7 @@ namespace NeuralNetwork {
         private int[] layerSizes;
         private Matrix[] weightMatrices;
         private Matrix[] biases;
-        private float learningRate = 0.8F;
+        private float learningRate = 3.0F;
 
         //Construction of a feedforward network is from a sequence of positive integer values
         //The first integer in the sequence represents the number of neurons in the first layer of the network
@@ -20,7 +20,8 @@ namespace NeuralNetwork {
         //For a proper network, the number of nodes on the first layer needs to be equal to the length of the input vector
         //and the number of nodes on the last layer needs to be equal to the length of the output vector
         //It is assumed that each node on a given layer is connected directly and only to each node on the next layer
-        public FeedforwardNeuralNetwork(int[] layerSizes) {
+        public FeedforwardNeuralNetwork(int[] layerSizes, float learningRate) {
+            this.learningRate = learningRate;
             this.layerSizes = layerSizes;
             numLayers = layerSizes.Length;
             weightMatrices = new Matrix[numLayers];
@@ -31,11 +32,23 @@ namespace NeuralNetwork {
             biases[0] = null;
             //Initializes the weight matrices and bias vectors for each layer to the proper size
             for (int i = 1; i < numLayers; ++i) {
-                weightMatrices[i] = new Matrix(layerSizes[i], layerSizes[i-1]);
+                weightMatrices[i] = new Matrix(layerSizes[i], layerSizes[i - 1]);
                 biases[i] = new Matrix(layerSizes[i], 1);
             }
             InitializeWeightMatrices();
             InitializeBiases();
+        }
+
+        public float LearningRate {
+            get {
+                return this.learningRate;
+            }
+            set {
+                if (value <= 0) {
+                    throw new ArgumentException("Learning rate must be greater than 0.");
+                }
+                this.learningRate = value;
+            }
         }
 
         //Sets every weight to a random value on a Gaussian distribution with mean 0 and standard deviation 1 
@@ -43,7 +56,7 @@ namespace NeuralNetwork {
             GaussianRandom random = new GaussianRandom(0, 1);
             for (int l = 1; l < numLayers; ++l) {
                 for (int i = 1; i <= weightMatrices[l].NumRows; ++i) {
-                    for(int j = 1; j <= weightMatrices[l].NumColumns; ++j) {
+                    for (int j = 1; j <= weightMatrices[l].NumColumns; ++j) {
                         random.StdDev = Math.Pow(weightMatrices[l].NumColumns, -0.5);
                         weightMatrices[l][i, j] = (float)random.NextDouble();
                     }
@@ -78,11 +91,17 @@ namespace NeuralNetwork {
             return layerOutput;
         }
 
-        public void TrainEpoch(Matrix[] inputs, Matrix[] expectedResult, int numEpochs) {
+        public void TrainEpochs(TrainingExample[] examples, int numEpochs) {
             for (int i = 0; i < numEpochs; ++i) {
-                for (int j = 0; j < inputs.Length; ++j) {
-                    TrainIteration(inputs[j], expectedResult[j]);
-                }
+                TrainDataSet(examples);
+            }
+        }
+
+        public void TrainDataSet(TrainingExample[] examples) {
+            Random rand = new Random();
+            examples = examples.OrderBy(x => rand.Next()).ToArray();
+            for (int i = 0; i < examples.Length; ++i) {
+                TrainIteration(examples[i].input, examples[i].expectedOutput);
             }
         }
         //Takes an input vector and an expected output vector
@@ -138,13 +157,17 @@ namespace NeuralNetwork {
                 layerOutputs[i] = Sigmoid.Sigma(weightedLayerSums[i]);
             }
             Matrix[] layerDeltas = new Matrix[numLayers];
-            layerDeltas[numLayers - 1] = Matrix.HadamardProduct(layerOutputs[numLayers-1] - expectedResult, Sigmoid.SigmaPrime(weightedLayerSums[numLayers-1]));
+            //quadatic cost
+            Matrix gradient = QuadraticGradient(layerOutputs[numLayers - 1], expectedResult);
+            //cross entropy cost
+            //Matrix gradient = CrossEntropyGradient(layerOutputs[numLayers - 1], expectedResult);
+            layerDeltas[numLayers - 1] = Matrix.HadamardProduct(gradient, Sigmoid.SigmaPrime(weightedLayerSums[numLayers - 1]));
             for (int i = numLayers - 2; i > 0; --i) {
-                layerDeltas[i] = Matrix.HadamardProduct(Matrix.Transpose(weightMatrices[i+1]) * layerDeltas[i+1], Sigmoid.SigmaPrime(weightedLayerSums[i]));
+                layerDeltas[i] = Matrix.HadamardProduct(Matrix.Transpose(weightMatrices[i + 1]) * layerDeltas[i + 1], Sigmoid.SigmaPrime(weightedLayerSums[i]));
             }
             //Gradient descent
             for (int i = numLayers - 1; i > 0; --i) {
-                weightMatrices[i] = weightMatrices[i] - learningRate * (layerDeltas[i] * Matrix.Transpose(layerOutputs[i-1]));
+                weightMatrices[i] = weightMatrices[i] - learningRate * (layerDeltas[i] * Matrix.Transpose(layerOutputs[i - 1]));
                 biases[i] = biases[i] - learningRate * (layerDeltas[i]);
             }
         }
@@ -167,5 +190,18 @@ namespace NeuralNetwork {
             }
             return quadraticTotal / 2;
         }
+
+        private Matrix QuadraticGradient(Matrix activations, Matrix expected) {
+            return activations - expected;
+        }
+
+        private Matrix CrossEntropyGradient(Matrix activations, Matrix expected) {
+            Matrix output = new Matrix(activations.NumRows, 1);
+            for (int i = 1; i <= activations.NumRows; ++i) {
+                output[i, 1] = (activations[i, 1] - expected[i, 1]) / ((activations[i, 1] + 1) * activations[i, 1]);
+            }
+            return output;
+        }
+
     }
 }

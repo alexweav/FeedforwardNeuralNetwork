@@ -12,8 +12,9 @@ namespace NeuralNetwork {
         //Not to be included in a program which employs the network
         static void Main(string[] args) {
             //LogicGatesExample();
-            DecimalBinaryExample();
+            //DecimalBinaryExample();
             //MNISTExample();
+            SineExample();
         }
 
         public static void MNISTExample() {
@@ -41,7 +42,7 @@ namespace NeuralNetwork {
 
                 Console.WriteLine(numImages + " total images detected.  Beginning training system.");
 
-                for (int q = 0; q < 100; ++q) {
+                for (int q = 0; q < 1; ++q) {
                     for (int r = 0; r < numImages; ++r) {
                         Matrix input = new Matrix(784, 1);
                         Matrix expectedOutput = new Matrix(10, 1);
@@ -195,33 +196,31 @@ namespace NeuralNetwork {
             int[] layers = new int[] { 2, 1, 1 };
             FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers);
             //Train this many cycles
-            int numTrainingEpochs = 100000;
+            int numTrainingEpochs = 10000;
+            TrainingExample ex1 = new TrainingExample(new Matrix(new float[,]{ { 0 },
+                                                                               { 0 } }),
+                                                      new Matrix(new float[,]{ { 0 } }));
+
+            TrainingExample ex2 = new TrainingExample(new Matrix(new float[,]{ { 0 },
+                                                                               { 1 } }),
+                                                      new Matrix(new float[,]{ { 1 } }));
+
+            TrainingExample ex3 = new TrainingExample(new Matrix(new float[,]{ { 1 },
+                                                                               { 0 } }),
+                                                      new Matrix(new float[,]{ { 1 } }));
+
+            TrainingExample ex4 = new TrainingExample(new Matrix(new float[,]{ { 1 },
+                                                                               { 1 } }),
+                                                      new Matrix(new float[,]{ { 1 } }));
+
+            TrainingExample[] trainingExamples = { ex1, ex2, ex3, ex4 };
             for (int i = 0; i < numTrainingEpochs; ++i) {
                 //Sets input matrices and output matrices and trains the network accordingly for all combinations
-                float[,] trainingArray = new float[,] { { 0 },
-                                                        { 0 } };
-                Matrix trainingInput = new Matrix(trainingArray);
-                float[,] expected = new float[,] { { 0 } };
-                Matrix expectedOutput = new Matrix(expected);
-                fnn.TrainIteration(trainingInput, expectedOutput);
-                trainingArray = new float[,] { { 0 },
-                                               { 1 } };
-                trainingInput = new Matrix(trainingArray);
-                expected = new float[,] { { 1 } };
-                expectedOutput = new Matrix(expected);
-                fnn.TrainIteration(trainingInput, expectedOutput);
-                trainingArray = new float[,] { { 1 },
-                                               { 0 } };
-                trainingInput = new Matrix(trainingArray);
-                expected = new float[,] { { 1 } };
-                expectedOutput = new Matrix(expected);
-                fnn.TrainIteration(trainingInput, expectedOutput);
-                trainingArray = new float[,] { { 1 },
-                                               { 1 } };
-                trainingInput = new Matrix(trainingArray);
-                expected = new float[,] { { 0 } };
-                expectedOutput = new Matrix(expected);
-                fnn.TrainIteration(trainingInput, expectedOutput);
+                Random rand = new Random();
+                trainingExamples = trainingExamples.OrderBy(x => rand.Next()).ToArray();
+                for (int j = 0; j < 4; ++j) {
+                    fnn.TrainIteration(trainingExamples[j].input, trainingExamples[j].expectedOutput);
+                }
             }
             //After training, evaluates the network with respect to all possible inputs
             //Prints their outputs to the console to see the result of training
@@ -245,6 +244,12 @@ namespace NeuralNetwork {
             input = new Matrix(inputArray);
             output = fnn.Evaluate(input);
             Console.WriteLine(output[1, 1]);
+        }
+
+        public static void SineExample() {
+            int[] layers = { 1, 3, 1 };
+            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers);
+
         }
     }
 }
