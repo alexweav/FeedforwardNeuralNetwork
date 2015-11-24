@@ -11,8 +11,8 @@ namespace NeuralNetwork {
         //This is simply a main function to demonstrate the use of the network
         //Not to be included in a program which employs the network
         static void Main(string[] args) {
-            LogicGatesExample();
-            //DecimalBinaryExample();
+            //LogicGatesExample();
+            DecimalBinaryExample();
             //MNISTExample();
             //SineExample();
         }
@@ -123,7 +123,7 @@ namespace NeuralNetwork {
         }
 
         public static void DecimalBinaryExample() {
-            int[] layers = new int[] { 2, 3, 5, 4 };
+            int[] layers = new int[] { 2, 5, 4 };
             FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F);
             DecimalBinaryTestNetwork(fnn);
             Matrix[] expectedOutputs = { new Matrix(new float[4,1]{ {1},
@@ -150,7 +150,11 @@ namespace NeuralNetwork {
                                                                     {0}}),
                                          new Matrix(new float[2,1]{ {1},
                                                                     {1}})};
-            //fnn.TrainEpochs(inputs, expectedOutputs, 1000);
+            TrainingExample[] examples = new TrainingExample[4];
+            for (int i = 0; i < 4; ++i) {
+                examples[i] = new TrainingExample(inputs[i], expectedOutputs[i]);
+            }
+            fnn.TrainEpochs(examples, 1000);
             DecimalBinaryTestNetwork(fnn);
         }
 
@@ -179,7 +183,7 @@ namespace NeuralNetwork {
             } else {
                 Console.WriteLine("2 fail." + outputs[1, 1] + " " + outputs[2, 1]);
             }
-            inputs[1, 1] = 0;
+            inputs[1, 1] = 1;
             inputs[2, 1] = 1;
             outputs = fnn.Evaluate(inputs);  //test for input = 3
             if (outputs[1, 1] < 0.1 && outputs[2, 1] < 0.1 && outputs[3, 1] < 0.1 && outputs[4, 1] > 0.9) {
