@@ -11,16 +11,16 @@ namespace NeuralNetwork {
         //This is simply a main function to demonstrate the use of the network
         //Not to be included in a program which employs the network
         static void Main(string[] args) {
-            //LogicGatesExample();
+            LogicGatesExample();
             //DecimalBinaryExample();
             //MNISTExample();
-            SineExample();
+            //SineExample();
         }
 
         public static void MNISTExample() {
             try {
                 int[] layers = new int[] { 784, 15, 10 };
-                FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers);
+                FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F);
                 Console.WriteLine("Neural network constructed.");
 
                 MNISTTestNetwork(fnn);
@@ -124,7 +124,7 @@ namespace NeuralNetwork {
 
         public static void DecimalBinaryExample() {
             int[] layers = new int[] { 2, 3, 5, 4 };
-            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers);
+            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F);
             DecimalBinaryTestNetwork(fnn);
             Matrix[] expectedOutputs = { new Matrix(new float[4,1]{ {1},
                                                                     {0},
@@ -150,7 +150,7 @@ namespace NeuralNetwork {
                                                                     {0}}),
                                          new Matrix(new float[2,1]{ {1},
                                                                     {1}})};
-            fnn.TrainEpoch(inputs, expectedOutputs, 1000);
+            //fnn.TrainEpochs(inputs, expectedOutputs, 1000);
             DecimalBinaryTestNetwork(fnn);
         }
 
@@ -193,8 +193,8 @@ namespace NeuralNetwork {
             //First layer is input layer
             //Initialize a 2-layer ANN
             //Two inputs, one output
-            int[] layers = new int[] { 2, 1, 1 };
-            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers);
+            int[] layers = new int[] { 2, 3, 1 };
+            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F);
             //Train this many cycles
             int numTrainingEpochs = 10000;
             TrainingExample ex1 = new TrainingExample(new Matrix(new float[,]{ { 0 },
@@ -211,7 +211,7 @@ namespace NeuralNetwork {
 
             TrainingExample ex4 = new TrainingExample(new Matrix(new float[,]{ { 1 },
                                                                                { 1 } }),
-                                                      new Matrix(new float[,]{ { 1 } }));
+                                                      new Matrix(new float[,]{ { 0 } }));
 
             TrainingExample[] trainingExamples = { ex1, ex2, ex3, ex4 };
             for (int i = 0; i < numTrainingEpochs; ++i) {
@@ -248,7 +248,7 @@ namespace NeuralNetwork {
 
         public static void SineExample() {
             int[] layers = { 1, 3, 1 };
-            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers);
+            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F);
 
         }
     }
