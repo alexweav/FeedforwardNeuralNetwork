@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using Matrices;
 
 namespace NeuralNetwork {
@@ -12,65 +13,95 @@ namespace NeuralNetwork {
         //Not to be included in a program which employs the network
         static void Main(string[] args) {
             //LogicGatesExample();
-            DecimalBinaryExample();
-            //MNISTExample();
-            //SineExample();
+            //DecimalBinaryExample();
+            MNISTExample();
         }
 
         public static void MNISTExample() {
             try {
-                int[] layers = new int[] { 784, 15, 10 };
-                FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F);
+                TrainingExample[] testExamples = GetTestExamples();
+                TrainingExample[] trainingExamples = GetTrainingExamples();
+                int[] layers = new int[] { 784, 400, 10 };
+                FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 0.5F);
                 Console.WriteLine("Neural network constructed.");
-
-                MNISTTestNetwork(fnn);
-
-                FileStream labelsStream = new FileStream(@"E:\Users\Alexander Weaver\My Documents\Programs\MNIST\train-labels.idx1-ubyte", FileMode.Open);
-                FileStream imagesStream = new FileStream(@"E:\Users\Alexander Weaver\My Documents\Programs\MNIST\train-images.idx3-ubyte", FileMode.Open);
-                Console.WriteLine("Datasets found.");
-                BinaryReader labelsReader = new BinaryReader(labelsStream);
-                BinaryReader imagesReader = new BinaryReader(imagesStream);
-                int magic1 = imagesReader.ReadInt32();
-                int numImages = (imagesReader.ReadByte() << 24) | (imagesReader.ReadByte() << 16) | (imagesReader.ReadByte() << 8) | (imagesReader.ReadByte());
-                int numRows = imagesReader.ReadInt32();
-                int numColumns = imagesReader.ReadInt32();
-                int magic2 = labelsReader.ReadInt32();
-                int numLabels = labelsReader.ReadInt32();
-                Console.WriteLine("Image databases prepared.");
-
                 
+                MNISTTestNetwork(fnn, testExamples);
 
-                Console.WriteLine(numImages + " total images detected.  Beginning training system.");
+                MNISTTrainNetwork(fnn, trainingExamples, testExamples);
 
-                for (int q = 0; q < 1; ++q) {
-                    for (int r = 0; r < numImages; ++r) {
-                        Matrix input = new Matrix(784, 1);
-                        Matrix expectedOutput = new Matrix(10, 1);
-                        for (int i = 1; i <= 784; ++i) {
-                            input[i, 1] = imagesReader.ReadByte() / 256;
-                        }
-                        int expectedNum = labelsReader.ReadByte();
-                        expectedOutput[expectedNum + 1, 1] = 1;
-
-                        fnn.TrainIteration(input, expectedOutput);
-
-                        if ((r + 1) % 100 == 0) {
-                            Console.WriteLine((r + 1) / 100 + "00 images trained.");
-                        }
-                    }
-                    
-                }
-
-                MNISTTestNetwork(fnn);
+                MNISTTestNetwork(fnn, testExamples);
 
             } catch (Exception ex) {
                 Console.WriteLine(ex.ToString());
             }
         }
 
-        public static void MNISTTestNetwork(FeedforwardNeuralNetwork fnn) {
+        public static void MNISTTestNetwork(FeedforwardNeuralNetwork fnn, TrainingExample[] testExamples) {
             try {
-                Console.WriteLine("Beginning neural network test procedure.");
+                Console.WriteLine("\nBeginning neural network test procedure.\n");
+                int numSuccesses = 0;
+                int numImages = testExamples.Length;
+                int expectedNum = 0;
+                for (int r = 0; r < numImages; ++r) {
+                    for (int i = 1; i <= 10; ++i) {
+                        if (testExamples[r].expectedOutput[i, 1] == 1) {
+                            expectedNum = i % 10;
+                        }
+                    }
+                    Matrix actualOutput = fnn.Evaluate(testExamples[r].input);
+                    float largestOutputValue = 0;
+                    int index = 0;
+                    for (int j = 1; j <= 10; ++j) {
+                        if (actualOutput[j, 1] > largestOutputValue) {
+                            largestOutputValue = actualOutput[j, 1];
+                            index = j;
+                        }
+                    }
+                    index %= 10;
+                    if (index == expectedNum) {
+                        ++numSuccesses;
+                    }
+
+                    //Console.WriteLine("Test value: " + expectedNum);
+                    //Console.WriteLine("Network detected: " + (index));
+
+
+                    if ((r + 1) % 1000 == 0) {
+                        Console.WriteLine((r + 1) / 100 + "00 test images processed.  Current success percentage: " + (float)numSuccesses/(r+1) * 100 + "%");
+                    }
+                }
+                Console.WriteLine("\nTest regimen completed.  Network was correct for " + (float)numSuccesses / numImages * 100 + "% of " + numImages + " images.\n");
+
+            } catch (Exception ex) {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
+        private static void MNISTTrainNetwork(FeedforwardNeuralNetwork fnn, TrainingExample[] trainingExamples, TrainingExample[] testExamples) {
+            Console.WriteLine("\nBeginning neural network training procedure.\n");
+            Console.WriteLine("Enter desired number of epochs.");
+            string epochsStr = Console.ReadLine();
+            int epochs = Convert.ToInt32(epochsStr);
+            do {
+                Console.WriteLine("Please wait for training cycle to complete...");
+                var timer = Stopwatch.StartNew();
+                fnn.TrainEpochs(trainingExamples, epochs);
+                Console.WriteLine("Training cycle completed in " + timer.Elapsed + ".");
+                Console.WriteLine("Test network? Enter Y for yes or anything else for no.");
+                string inputStr = Console.ReadLine();
+                char input = Convert.ToChar(inputStr);
+                if (input == 'Y') {
+                    MNISTTestNetwork(fnn, testExamples);
+                }
+                Console.WriteLine("Continue training? Enter 0 for no or a valid number of epochs for yes.");
+                epochsStr = Console.ReadLine();
+                epochs = Convert.ToInt32(epochsStr);
+            } while (epochs > 0);
+        }
+
+        private static TrainingExample[] GetTestExamples() {
+            try {
+                Console.WriteLine("Searching for test datasets.");
                 FileStream labelsStream = new FileStream(@"E:\Users\Alexander Weaver\My Documents\Programs\MNIST\t10k-labels.idx1-ubyte", FileMode.Open);
                 FileStream imagesStream = new FileStream(@"E:\Users\Alexander Weaver\My Documents\Programs\MNIST\t10k-images.idx3-ubyte", FileMode.Open);
                 Console.WriteLine("Test datasets found.");
@@ -82,44 +113,104 @@ namespace NeuralNetwork {
                 int numColumns = imagesReader.ReadInt32();
                 int magic2 = labelsReader.ReadInt32();
                 int numLabels = labelsReader.ReadInt32();
-                Console.WriteLine("Test image databases prepared.");
-
-                int numSuccesses = 0;
+                Console.WriteLine("Populating test examples.");
+                TrainingExample[] testExamples = new TrainingExample[numImages];
+                //List<TrainingExample> testExamples = new List<TrainingExample>();
                 for (int r = 0; r < numImages; ++r) {
                     Matrix input = new Matrix(784, 1);
                     Matrix expectedOutput = new Matrix(10, 1);
                     for (int i = 1; i <= 784; ++i) {
-                        input[i, 1] = imagesReader.ReadByte() / 256;
+                        byte b = imagesReader.ReadByte();
+                        input[i, 1] = (float)b / (float)256;
                     }
                     int expectedNum = labelsReader.ReadByte();
-                    expectedOutput[expectedNum + 1, 1] = 1;
-                    Matrix actualOutput = fnn.Evaluate(input);
-                    bool successfulRun = true;
-                    float largestOutputValue = 0;
-                    int index = 0;
-                    for (int j = 1; j <= 10; ++j) {
-                        if (actualOutput[j, 1] > largestOutputValue) {
-                            largestOutputValue = actualOutput[j, 1];
-                            index = j;
-                        }
+                    if (expectedNum == 0) {
+                        expectedOutput[10, 1] = 1;
+                    } else {
+                        expectedOutput[expectedNum, 1] = 1;
                     }
-                    if (index - 1 == expectedNum) {
-                        ++numSuccesses;
-                    }
-
-                    Console.WriteLine("Test value: " + expectedNum);
-                    Console.WriteLine("Output vector: " + actualOutput[1, 1] + actualOutput[2, 1] + actualOutput[3, 1] + actualOutput[4, 1] + actualOutput[5, 1] + actualOutput[6, 1] + actualOutput[7, 1] + actualOutput[8, 1] + actualOutput[9, 1] + actualOutput[10, 1]);
-
-
-                    if ((r + 1) % 100 == 0) {
-                        Console.WriteLine((r + 1) / 100 + "00 test images processed.  Current success percentage: " + (float)numSuccesses/(r+1) * 100 + "%");
-                    }
+                    testExamples[r] = new TrainingExample(input, expectedOutput);
+                    /*if ((expectedNum == 2 || expectedNum == 6)) {
+                        testExamples.Add(new TrainingExample(input, expectedOutput));
+                    }*/
                 }
-                Console.WriteLine("Test regimen completed.  Network was correct for " + (float)numSuccesses / numImages * 100 + "% of " + numImages + " images.");
+                Console.WriteLine("Test examples populated.");
+                return testExamples.ToArray();
 
             } catch (Exception ex) {
                 Console.WriteLine(ex.ToString());
+                return null;
             }
+        }
+
+        private static TrainingExample[] GetTrainingExamples() {
+            try {
+                Console.WriteLine("Searching for training datasets.");
+                FileStream labelsStream = new FileStream(@"E:\Users\Alexander Weaver\My Documents\Programs\MNIST\train-labels.idx1-ubyte", FileMode.Open);
+                FileStream imagesStream = new FileStream(@"E:\Users\Alexander Weaver\My Documents\Programs\MNIST\train-images.idx3-ubyte", FileMode.Open);
+                Console.WriteLine("Training datasets found.");
+                BinaryReader labelsReader = new BinaryReader(labelsStream);
+                BinaryReader imagesReader = new BinaryReader(imagesStream);
+                int magic1 = imagesReader.ReadInt32();
+                int numImages = (imagesReader.ReadByte() << 24) | (imagesReader.ReadByte() << 16) | (imagesReader.ReadByte() << 8) | (imagesReader.ReadByte());
+                int numRows = imagesReader.ReadInt32();
+                int numColumns = imagesReader.ReadInt32();
+                int magic2 = labelsReader.ReadInt32();
+                int numLabels = labelsReader.ReadInt32();
+                Console.WriteLine("Popluating training examples.");
+                TrainingExample[] trainingExamples = new TrainingExample[numImages];
+                //List<TrainingExample> trainingExamples = new List<TrainingExample>();
+                for (int r = 0; r < numImages; ++r) {
+                    Matrix input = new Matrix(784, 1);
+                    Matrix expectedOutput = new Matrix(10, 1);
+                    for (int i = 1; i <= 784; ++i) {
+                        byte b = imagesReader.ReadByte();
+                        input[i, 1] = (float)b / (float)256;
+                    }
+                    int expectedNum = labelsReader.ReadByte();
+                    if (expectedNum == 0) {
+                        expectedOutput[10, 1] = 1;
+                    } else {
+                        expectedOutput[expectedNum, 1] = 1;
+                    }
+                    trainingExamples[r] = new TrainingExample(input, expectedOutput);
+                    /*if ((expectedNum == 2 || expectedNum == 6)) {
+                        trainingExamples.Add(new TrainingExample(input, expectedOutput));
+                    }*/
+                }
+                Console.WriteLine("Training examples populated.");
+                return trainingExamples.ToArray();
+            } catch (Exception ex) {
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
+        }
+
+        private static void displayImage(TrainingExample example) {
+            for (int i = 1; i <= 784; ++i) {
+                if (i - 1 % 28 == 0) {
+                    Console.Write("\n");
+                }
+                Console.Write(example.input[i, 1] + ", ");
+            }
+            Console.Write("\n");
+            string s = "";
+            for (int i = 1; i <= 784; ++i) {
+                
+                
+                if (example.input[i, 1] == 0) {
+                    s += " ";
+                } else if (example.input[i, 1] < 0.5F) {
+                    s += ".";
+                } else if (example.input[i, 1] <= 1.0F) {
+                    s += "O";
+                }
+                if (i % 28 == 0) {
+                    s += "\n";
+                }
+            }
+            Console.WriteLine(s);
+            Console.WriteLine("\n\n" + example.expectedOutput[1, 1] + " " + example.expectedOutput[2, 1] + " " + example.expectedOutput[3, 1] + " " + example.expectedOutput[4, 1] + " " + example.expectedOutput[5, 1] + " " + example.expectedOutput[6, 1] + " " + example.expectedOutput[7, 1] + " " + example.expectedOutput[8, 1] + " " + example.expectedOutput[9, 1] + " " + example.expectedOutput[10, 1] + " ");
         }
 
         public static void DecimalBinaryExample() {

@@ -12,7 +12,7 @@ namespace NeuralNetwork {
         private int[] layerSizes;
         private Matrix[] weightMatrices;
         private Matrix[] biases;
-        private float learningRate = 3.0F;
+        private float learningRate;
 
         //Construction of a feedforward network is from a sequence of positive integer values
         //The first integer in the sequence represents the number of neurons in the first layer of the network
@@ -92,7 +92,9 @@ namespace NeuralNetwork {
         }
 
         public void TrainEpochs(TrainingExample[] examples, int numEpochs) {
+            Console.WriteLine("\n");
             for (int i = 0; i < numEpochs; ++i) {
+                Console.WriteLine("Beginning epoch " + (i + 1) + " of " + numEpochs + ".");
                 TrainDataSet(examples);
             }
         }
@@ -102,7 +104,17 @@ namespace NeuralNetwork {
             examples = examples.OrderBy(x => rand.Next()).ToArray();
             for (int i = 0; i < examples.Length; ++i) {
                 TrainIteration(examples[i].input, examples[i].expectedOutput);
+                //If there are over 5000 examples, provide status updates in console
+                if (examples.Length >= 5000) {
+                    if(i == 0) Console.WriteLine("\n");
+                    if (i % 1000 == 0 && i != 0) {
+                        Console.WriteLine(i + "/" + examples.Length + " objects trained. Epoch " + Math.Round((double)i/examples.Length, 3) * 100 + "% complete.");
+                    }
+                }
+                
             }
+            Console.WriteLine(examples.Length + "/" + examples.Length + " objects trained. Epoch 100% complete.");
+            Console.WriteLine("\n");
         }
         //Takes an input vector and an expected output vector
         //Uses the discrepancy between the two to train the network via backpropagation
@@ -167,7 +179,7 @@ namespace NeuralNetwork {
             }
             //Gradient descent
             for (int i = numLayers - 1; i > 0; --i) {
-                weightMatrices[i] = weightMatrices[i] - learningRate * (layerDeltas[i] * Matrix.Transpose(layerOutputs[i - 1]));
+                weightMatrices[i] = weightMatrices[i] - (learningRate * layerDeltas[i]) * Matrix.Transpose(layerOutputs[i - 1]);
                 biases[i] = biases[i] - learningRate * (layerDeltas[i]);
             }
         }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Matrices {
     public class Matrix {
 
-        private float[,] data;
+        private float[][] data;
         private int numRows;
         private int numColumns;
 
@@ -19,14 +19,12 @@ namespace Matrices {
             if (n < 1) {
                 throw new ArgumentException("Cannot have a " + n + "x" + n + " matrix.");
             }
-            data = new float[n, n];
+            data = new float[n][];
+            for (int i = 0; i < n; ++i) {
+                data[i] = new float[n];
+            }
             numRows = n;
             numColumns = n;
-            for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < n; ++j) {
-                    data[i, j] = 0;
-                }
-            }
         }
 
         //Constructs a matrix with m rows and n columns filled with zeros
@@ -34,14 +32,12 @@ namespace Matrices {
             if (m < 1 || n < 1) {
                 throw new ArgumentException("Cannot have a " + m + "x" + n + " matrix.");
             }
-            data = new float[m, n];
+            data = new float[m][];
+            for(int i = 0; i < m; ++i) {
+                data[i] = new float[n];
+            }
             numRows = m;
             numColumns = n;
-            for (int i = 0; i < m; ++i) {
-                for (int j = 0; j < n; ++j) {
-                    data[i, j] = 0;
-                }
-            }
         }
 
         //Constructs a matrix from a pre-existing 2D array
@@ -54,7 +50,13 @@ namespace Matrices {
             if (numRows < 1 || numColumns < 1) {
                 throw new ArgumentException("Can only build matrices from nonempty 2D arrays.");
             }
-            this.data = data;
+            this.data = new float[numRows][];
+            for (int i = 0; i < numRows; ++i) {
+                this.data[i] = new float[numColumns];
+                for (int j = 0; j < numColumns; ++j) {
+                    this.data[i][j] = data[i, j];
+                }
+            }
         }
 
         #endregion
@@ -62,7 +64,7 @@ namespace Matrices {
         //gets, sets if present
         #region GetSet
 
-        public float[,] Data {
+        public float[][] Data {
             get {
                 return data;
             }
@@ -88,10 +90,10 @@ namespace Matrices {
         //Matrices are indexed using a 1-based system, as notated mathematically
         public float this[int i, int j] {
             get {
-                return data[i - 1, j - 1];
+                return data[i - 1][j - 1];
             }
             set {
-                data[i - 1, j - 1] = value;
+                data[i - 1][j - 1] = value;
             }
         }
 
@@ -139,18 +141,31 @@ namespace Matrices {
             return !(a == b);
         }
 
-        private static bool AreEqual2DArrays(float[,] a, float[,] b) {
+        private static bool AreEqual2DArrays(float[][] a, float[][] b) {
             if (a.GetLength(0) != b.GetLength(0) || a.GetLength(1) != b.GetLength(1)) {
                 return false;
             }
             for (int i = 0; i < a.GetLength(0); ++i) {
                 for (int j = 0; j < a.GetLength(1); ++j) {
-                    if (a[i, j] != b[i, j]) {
+                    if (a[i][j] != b[i][j]) {
                         return false;
                     }
                 }
             }
             return true;
+        }
+
+        //Returns the string representation of the matrix.
+        //Rows are separated by newlines and items in rows are comma-separated.
+        public override string ToString() {
+            string output = "";
+            for (int i = 1; i <= numRows; ++i) {
+                for (int j = 1; j <= numColumns; ++j) {
+                    output += this[i, j] + ", ";
+                }
+                output += "\n";
+            }
+            return output;
         }
 
         #endregion
@@ -175,6 +190,24 @@ namespace Matrices {
             return result;
         }
 
+        public static Matrix Subtract(Matrix a, Matrix b) {
+            if (a == null || b == null) {
+                throw new NullReferenceException("Null matrices cannot be subtractd.");
+            }
+            if (a.NumRows != b.NumRows || a.NumColumns != b.NumColumns) {
+                throw new ArgumentException("Matrices must have the same dimensions to be subtracted.");
+            }
+            int numRows = a.NumRows;
+            int numColumns = a.NumColumns;
+            Matrix result = new Matrix(numRows, numColumns);
+            for (int i = 0; i < numRows; ++i) {
+                for (int j = 0; j < numColumns; ++j) {
+                    result.data[i][j] = a.data[i][j] - b.data[i][j];
+                }
+            }
+            return result;
+        }
+
         //Addition of two matrices a and b can be expressed as "a + b"
         public static Matrix operator +(Matrix a, Matrix b) {
             return Add(a, b);
@@ -187,9 +220,11 @@ namespace Matrices {
                 throw new NullReferenceException("Cannot multiply by null matrix.");
             }
             Matrix result = new Matrix(a.NumRows, a.NumColumns);
-            for (int i = 1; i <= a.NumRows; ++i) {
-                for (int j = 1; j <= a.NumColumns; ++j) {
-                    result[i, j] = a[i, j] * c;
+            int numRows = a.NumRows;
+            int numColumns = a.NumColumns;
+            for (int i = 0; i < numRows; ++i) {
+                for (int j = 0; j < numColumns; ++j) {
+                    result.data[i][j] = a.data[i][j] * c;
                 }
             }
             return result;
@@ -215,20 +250,17 @@ namespace Matrices {
         //If the first matrix is m x n and the second matrix is n x p, then the result matrix is m x p
         //The given matrices must share the appropriate dimension in order to be multiplied
         public static Matrix Multiply(Matrix a, Matrix b) {
-            if (a == null || b == null) {
-                throw new NullReferenceException("Cannot multiply by null matrix.");
-            }
-            if (a.NumColumns != b.NumRows) {
-                throw new ArgumentException("In order to multiply matrices A and B, the number of columns of A must equal the number of rows of B");
-            }
-            Matrix output = new Matrix(a.NumRows, b.NumColumns);
-            for (int i = 1; i <= a.NumRows; ++i) {
-                for (int j = 1; j <= b.NumColumns; ++j) {
+            int aNumRows = a.NumRows;
+            int aNumColumns = a.NumColumns;
+            int bNumColumns = b.NumColumns;
+            Matrix output = new Matrix(aNumRows, bNumColumns);
+            for (int i = 0; i < aNumRows; ++i) {
+                for(int j = 0; j < bNumColumns; ++j) {
                     float sum = 0;
-                    for (int k = 1; k <= a.NumColumns; ++k) {
-                        sum += a[i, k] * b[k, j];
+                    for (int k = 0; k < aNumColumns; ++k) {
+                        sum += a.data[i][k] * b.data[k][j];
                     }
-                    output[i, j] = sum;
+                    output.Data[i][j] = sum;
                 }
             }
             return output;
@@ -247,12 +279,12 @@ namespace Matrices {
         //Subtraction between matrices a and b, denoted "a - b", is defined as follows:
         //      a - b := a + (-b)
         public static Matrix operator -(Matrix a, Matrix b) {
-            return Add(a, -b);
+            return Subtract(a, b); 
         }
 
         //For two matrices a and b of the same dimensions, the Hadamard product is a matrix for which
         //each element is the product of its two corresponding elements in matrices a and b
-        //HadamardProduct(a, b)[i, j] = a[i, j] * b[i, j]
+        //HadamardProduct(a, b)[i][j] = a[i][j] * b[i][j]
         public static Matrix HadamardProduct(Matrix a, Matrix b) {
             if (a == null || b == null) {
                 throw new NullReferenceException("Cannot take the Hadamard product of null matrices.");
@@ -270,7 +302,7 @@ namespace Matrices {
         }
 
         //Given a matrix a, the transpose of a is the matrix in which the ith row, jth column element of Transpose(a) is the jth row, ith column element of a.
-        //i.e., Transpose(a)[i, j] = a[j, i]
+        //i.e., Transpose(a)[i][j] = a[j, i]
         //This is the same as reflecting the matrix a over its main diagonal.
         public static Matrix Transpose(Matrix a) {
             if (a == null) {
