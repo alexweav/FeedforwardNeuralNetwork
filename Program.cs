@@ -22,7 +22,7 @@ namespace NeuralNetwork {
                 TrainingExample[] testExamples = GetTestExamples();
                 TrainingExample[] trainingExamples = GetTrainingExamples();
                 int[] layers = new int[] { 784, 400, 10 };
-                FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 0.5F);
+                FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 0.5F, 0.1F);
                 Console.WriteLine("Neural network constructed.");
                 
                 MNISTTestNetwork(fnn, testExamples);
@@ -215,7 +215,7 @@ namespace NeuralNetwork {
 
         public static void DecimalBinaryExample() {
             int[] layers = new int[] { 2, 5, 4 };
-            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F);
+            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F, 0.1F);
             DecimalBinaryTestNetwork(fnn);
             Matrix[] expectedOutputs = { new Matrix(new float[4,1]{ {1},
                                                                     {0},
@@ -289,7 +289,7 @@ namespace NeuralNetwork {
             //Initialize a 2-layer ANN
             //Two inputs, one output
             int[] layers = new int[] { 2, 3, 1 };
-            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F);
+            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F, 0.1F);
             //Train this many cycles
             int numTrainingEpochs = 10000;
             TrainingExample ex1 = new TrainingExample(new Matrix(new float[,]{ { 0 },
@@ -314,7 +314,7 @@ namespace NeuralNetwork {
                 Random rand = new Random();
                 trainingExamples = trainingExamples.OrderBy(x => rand.Next()).ToArray();
                 for (int j = 0; j < 4; ++j) {
-                    fnn.TrainIteration(trainingExamples[j].input, trainingExamples[j].expectedOutput);
+                    fnn.TrainIteration(trainingExamples[j].input, trainingExamples[j].expectedOutput, 1 - (1.0F * 0.1F / 4));
                 }
             }
             //After training, evaluates the network with respect to all possible inputs
@@ -343,7 +343,7 @@ namespace NeuralNetwork {
 
         public static void SineExample() {
             int[] layers = { 1, 3, 1 };
-            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F);
+            FeedforwardNeuralNetwork fnn = new FeedforwardNeuralNetwork(layers, 1.0F, 0.1F);
 
         }
     }

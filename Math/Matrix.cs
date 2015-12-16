@@ -190,6 +190,8 @@ namespace Matrices {
             return result;
         }
 
+        //Subtracts two matrices and returns the result.  The matrices must have the same dimensions in order to add.
+        //Subtraction makes the second argument matrix negative and adds it to the first argument matrix 
         public static Matrix Subtract(Matrix a, Matrix b) {
             if (a == null || b == null) {
                 throw new NullReferenceException("Null matrices cannot be subtractd.");
@@ -200,11 +202,11 @@ namespace Matrices {
             int numRows = a.NumRows;
             int numColumns = a.NumColumns;
             Matrix result = new Matrix(numRows, numColumns);
-            for (int i = 0; i < numRows; ++i) {
+            Parallel.For(0, numRows, (i) => {
                 for (int j = 0; j < numColumns; ++j) {
                     result.data[i][j] = a.data[i][j] - b.data[i][j];
                 }
-            }
+            });
             return result;
         }
 
@@ -254,15 +256,15 @@ namespace Matrices {
             int aNumColumns = a.NumColumns;
             int bNumColumns = b.NumColumns;
             Matrix output = new Matrix(aNumRows, bNumColumns);
-            for (int i = 0; i < aNumRows; ++i) {
-                for(int j = 0; j < bNumColumns; ++j) {
+            Parallel.For(0, aNumRows, (i) => {
+                for (int j = 0; j < bNumColumns; ++j) {
                     float sum = 0;
                     for (int k = 0; k < aNumColumns; ++k) {
                         sum += a.data[i][k] * b.data[k][j];
                     }
                     output.Data[i][j] = sum;
                 }
-            }
+            });
             return output;
         }
 
